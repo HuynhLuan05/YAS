@@ -83,6 +83,31 @@ class PaymentServiceTest {
         verifyResult(capturedPayment, capturePaymentResponseVm);
     }
 
+    @Test
+    void initPayment_UnknownProvider_ThrowsException() {
+        InitPaymentRequestVm requestVm = InitPaymentRequestVm.builder()
+                .paymentMethod("UNKNOWN_METHOD")
+                .totalPrice(BigDecimal.TEN)
+                .checkoutId("123")
+                .build();
+
+               IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, 
+                () -> paymentService.initPayment(requestVm));
+        assertEquals("No payment handler found for provider: UNKNOWN_METHOD", exception.getMessage());
+    }
+
+    @Test
+    void capturePayment_UnknownProvider_ThrowsException() {
+        CapturePaymentRequestVm requestVm = CapturePaymentRequestVm.builder()
+                .paymentMethod("UNKNOWN_METHOD")
+                .token("123")
+                .build();
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, 
+                () -> paymentService.capturePayment(requestVm));
+        assertEquals("No payment handler found for provider: UNKNOWN_METHOD", exception.getMessage());
+    }
+
     private CapturedPayment prepareCapturedPayment() {
         return CapturedPayment.builder()
             .orderId(2L)

@@ -108,4 +108,18 @@ class OrderServiceTest {
         assertThat(result.paymentId()).isEqualTo(78910L);
         assertThat(result.paymentStatus()).isEqualTo("SUCCESS");
     }
+
+    @Test
+    void testHandleLongFallback() throws Throwable {
+        Throwable throwable = new RuntimeException("Test Exception");
+        Long result = orderService.handleLongFallback(throwable);
+        assertThat(result).isNull(); // Adjust based on AbstractCircuitBreakFallbackHandler implementation
+    }
+
+    @Test
+    void testHandlePaymentOrderStatusFallback() throws Throwable {
+        Throwable throwable = new RuntimeException("Test Exception");
+        PaymentOrderStatusVm result = orderService.handlePaymentOrderStatusFallback(throwable);
+        assertThat(result).isNull(); // Adjust based on AbstractCircuitBreakFallbackHandler implementation
+    }
 }
