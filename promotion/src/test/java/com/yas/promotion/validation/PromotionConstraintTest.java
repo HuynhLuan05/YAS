@@ -14,7 +14,7 @@ class PromotionConstraintTest {
         // Retrieve the annotation from a dummy class
         PromotionConstraint constraint = DummyClass.class.getAnnotation(PromotionConstraint.class);
         assertNotNull(constraint);
-        assertEquals("Invalid promotion data", constraint.message());
+        assertEquals("Promotion is invalid", constraint.message());
         assertEquals(0, constraint.groups().length);
         assertEquals(0, constraint.payload().length);
     }
