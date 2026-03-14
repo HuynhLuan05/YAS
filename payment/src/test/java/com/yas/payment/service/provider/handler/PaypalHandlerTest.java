@@ -70,7 +70,7 @@ class PaypalHandlerTest {
             .paymentFee(BigDecimal.ONE)
             .gatewayTransactionId("TXN-456")
             .paymentMethod(PaymentMethod.PAYPAL.name())
-            .paymentStatus(PaymentStatus.SUCCEEDED.name())
+            .paymentStatus(PaymentStatus.COMPLETED.name())
             .failureMessage(null)
             .build();
         when(paypalService.capturePayment(any())).thenReturn(mockResponse);
@@ -84,6 +84,6 @@ class PaypalHandlerTest {
         assertEquals("checkout-1", result.getCheckoutId());
         assertEquals(BigDecimal.TEN, result.getAmount());
         assertEquals(PaymentMethod.PAYPAL, result.getPaymentMethod());
-        assertEquals(PaymentStatus.SUCCEEDED, result.getPaymentStatus());
+        assertEquals(PaymentStatus.COMPLETED, result.getPaymentStatus());
     }
 }
