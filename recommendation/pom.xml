@@ -21,7 +21,7 @@
         <spring-ai.version>1.0.0</spring-ai.version>
         <commons-text.version>1.13.1</commons-text.version>
         <protobuf-java.version>3.25.8</protobuf-java.version>
-        <netty-codec-http2.version>4.1.125.Final</netty-codec-http2.version>
+        <httpclient.version>4.5.14</httpclient.version>
     </properties>
 
     <dependencies>
@@ -123,9 +123,9 @@
                 <version>${protobuf-java.version}</version>
             </dependency>
             <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-codec-http2</artifactId>
-                <version>${netty-codec-http2.version}</version>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>${httpclient.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
