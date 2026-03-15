@@ -22,11 +22,17 @@
     </properties>
 
     <dependencies>
-        <!-- Override to 4.0.3 for delivery only: fixes Snyk high-severity tomcat-embed-core (Incorrect Authorization) -->
+        <!-- Override to 4.0.3 for delivery only -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
             <version>4.0.3</version>
+        </dependency>
+        <!-- Force tomcat-embed-core 11.0.18: Snyk high-severity SNYK-JAVA-ORGAPACHETOMCATEMBED-15307822 (parent pulls 11.0.15 via starter-tomcat 4.0.2) -->
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-core</artifactId>
+            <version>11.0.18</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
