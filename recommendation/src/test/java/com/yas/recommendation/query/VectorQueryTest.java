@@ -2,6 +2,8 @@ package com.yas.recommendation.query;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import com.yas.recommendation.config.KafkaIntegrationTestConfiguration;
@@ -14,11 +16,14 @@ import com.yas.recommendation.viewmodel.RelatedProductVm;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.IntStream;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.ai.document.Document;
+import org.springframework.ai.embedding.Embedding;
 import org.springframework.ai.embedding.EmbeddingModel;
+import org.springframework.ai.embedding.EmbeddingRequest;
+import org.springframework.ai.embedding.EmbeddingResponse;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -73,7 +78,7 @@ public class VectorQueryTest {
         when(embeddingSearchConfiguration.similarityThreshold()).thenReturn(-1D); // force to query all data, not depend on vector compare operation
         when(productService.getProductDetail(productId)).thenReturn(searchedProduct);
         when(productService.getProductDetail(similarProductId)).thenReturn(similarProduct);
-        when(embeddingModel.embed(any(Document.class))).thenReturn(randomEmbed());
+        mockEmbeddingResponse();
         productVectorRepository.add(productId);
         productVectorRepository.add(similarProductId);
         List<RelatedProductVm> relatedProductVms = relatedProductQuery.similaritySearch(-2L);
@@ -90,6 +95,28 @@ public class VectorQueryTest {
             floatArray[i] = random.nextFloat();
         }
         return floatArray;
+    }
+
+    private static EmbeddingResponse embeddingResponse(int size) {
+        return new EmbeddingResponse(
+            IntStream.range(0, Math.max(size, 1))
+                .mapToObj(index -> new Embedding(randomEmbed(), index))
+                .toList()
+        );
+    }
+
+    private void mockEmbeddingResponse() {
+        when(embeddingModel.embed(anyList(), any(), any())).thenAnswer(invocation -> {
+            List<?> documents = invocation.getArgument(0);
+            return IntStream.range(0, Math.max(documents.size(), 1))
+                .mapToObj(index -> randomEmbed())
+                .toList();
+        });
+        when(embeddingModel.embed(anyString())).thenReturn(randomEmbed());
+        when(embeddingModel.call(any(EmbeddingRequest.class))).thenAnswer(invocation -> {
+            EmbeddingRequest request = invocation.getArgument(0);
+            return embeddingResponse(request.getInstructions().size());
+        });
     }
 
     private static @NotNull ProductDetailVm getProductDetailVm(long productId) {

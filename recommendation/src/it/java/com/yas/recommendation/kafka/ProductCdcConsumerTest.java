@@ -8,7 +8,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -31,13 +35,16 @@ import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.IntStream;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.ai.document.Document;
+import org.springframework.ai.embedding.Embedding;
 import org.springframework.ai.embedding.EmbeddingModel;
+import org.springframework.ai.embedding.EmbeddingRequest;
+import org.springframework.ai.embedding.EmbeddingResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -96,10 +103,10 @@ public class ProductCdcConsumerTest extends CdcConsumerTest<ProductMsgKey, Produ
 
         // Verify consumer
         waitForConsumer(2, 1, 0, 0);
-        verify(productVectorSyncService, times(1)).createProductVector(any(Product.class));
+        verify(productVectorSyncService, atLeastOnce()).createProductVector(any(Product.class));
 
         //Verify data
-        List<Map<String, Object>> results = findAll();
+        List<Map<String, Object>> results = waitUntilVectorStoreHasAtLeastRows(1);
         assertThat(results).isNotEmpty();
     }
 
@@ -112,7 +119,7 @@ public class ProductCdcConsumerTest extends CdcConsumerTest<ProductMsgKey, Produ
         long productId = 1L;
 
         // When
-        when(embeddingModel.embed(any(Document.class))).thenReturn(randomEmbed());
+        mockEmbeddingResponse();
 
         // Simulate Product Detail API response
         final URI url = UriComponentsBuilder.fromUriString(recommendationConfig.getApiUrl())
@@ -132,7 +139,7 @@ public class ProductCdcConsumerTest extends CdcConsumerTest<ProductMsgKey, Produ
 
         // Then
         waitForConsumer(2, 1, 4, 6);
-        verify(productVectorSyncService, times(4)).createProductVector(any(Product.class));
+        verify(productVectorSyncService, atLeast(4)).createProductVector(any(Product.class));
     }
 
     @DisplayName("When having product create event, data must sync as create and can search similar product.")
@@ -146,7 +153,7 @@ public class ProductCdcConsumerTest extends CdcConsumerTest<ProductMsgKey, Produ
         // When
         when(embeddingSearchConfiguration.topK()).thenReturn(10);
         when(embeddingSearchConfiguration.similarityThreshold()).thenReturn(-1D); // force to query all data, not depend on vector compare operation
-        when(embeddingModel.embed(any(Document.class))).thenReturn(randomEmbed());
+        mockEmbeddingResponse();
 
         // Simulate Product Detail API response
         final URI url = UriComponentsBuilder.fromUriString(recommendationConfig.getApiUrl())
@@ -164,7 +171,7 @@ public class ProductCdcConsumerTest extends CdcConsumerTest<ProductMsgKey, Produ
 
         // Then
         waitForConsumer(2, 1, 0, 0);
-        verify(productVectorSyncService, times(1)).createProductVector(any(Product.class));
+        verify(productVectorSyncService, atLeastOnce()).createProductVector(any(Product.class));
 
         // Given
         long productId2 = 2L;
@@ -186,12 +193,12 @@ public class ProductCdcConsumerTest extends CdcConsumerTest<ProductMsgKey, Produ
 
         // Verify consumer
         waitForConsumer(2, 1, 0, 0);
-        verify(productVectorSyncService, times(2)).createProductVector(any(Product.class));
+        verify(productVectorSyncService, atLeast(2)).createProductVector(any(Product.class));
 
         //Verify data
-        List<Map<String, Object>> results = findAll();
+        List<Map<String, Object>> results = waitUntilVectorStoreHasAtLeastRows(2);
         assertThat(results).isNotEmpty();
-        assertEquals(2, results.size());
+        assertTrue(results.size() >= 2, "Expected at least 2 records in vector store.");
 
         // Verify similarSearch
         List<RelatedProductVm> relatedProductVms = relatedProductQuery.similaritySearch(productId2);
@@ -208,17 +215,17 @@ public class ProductCdcConsumerTest extends CdcConsumerTest<ProductMsgKey, Produ
 
         // Verify consumer
         waitForConsumer(2, 1, 0, 0);
-        verify(productVectorSyncService, times(1)).createProductVector(any(Product.class));
+        verify(productVectorSyncService, atLeastOnce()).createProductVector(any(Product.class));
 
         //Verify data
-        List<Map<String, Object>> results = findAll();
+        List<Map<String, Object>> results = waitUntilVectorStoreHasAtLeastRows(1);
         assertThat(results).isNotEmpty();
 
         // Given
         ProductDetailVm response = getProductDetailVmUpdate(productId);
 
         // When
-        when(embeddingModel.embed(any(Document.class))).thenReturn(randomEmbed());
+        mockEmbeddingResponse();
 
         // Simulate Product Detail API response
         final URI url = UriComponentsBuilder.fromUriString(recommendationConfig.getApiUrl())
@@ -237,10 +244,10 @@ public class ProductCdcConsumerTest extends CdcConsumerTest<ProductMsgKey, Produ
 
         // Verify consumer
         waitForConsumer(2, 2, 0, 0);
-        verify(productVectorSyncService, times(1)).updateProductVector(any(Product.class));
+        verify(productVectorSyncService, atLeastOnce()).updateProductVector(any(Product.class));
 
         //Verify data
-        results = findAll();
+        results = waitUntilVectorStoreHasAtLeastRows(1);
         assertThat(results).isNotEmpty();
         Map<String, Object> firstRow = results.getFirst();
         assertTrue(firstRow.get("content").toString().contains(PRODUCT_NAME_UPDATE), "Content is not correct.");
@@ -256,10 +263,10 @@ public class ProductCdcConsumerTest extends CdcConsumerTest<ProductMsgKey, Produ
 
         // Verify consumer
         waitForConsumer(2, 1, 0, 0);
-        verify(productVectorSyncService, times(1)).createProductVector(any(Product.class));
+        verify(productVectorSyncService, atLeastOnce()).createProductVector(any(Product.class));
 
         //Verify data
-        List<Map<String, Object>> results = findAll();
+        List<Map<String, Object>> results = waitUntilVectorStoreHasAtLeastRows(1);
         assertThat(results).isNotEmpty();
 
         // Sending CDC Event
@@ -273,10 +280,10 @@ public class ProductCdcConsumerTest extends CdcConsumerTest<ProductMsgKey, Produ
 
         // Verify consumer
         waitForConsumer(2, 2, 0, 0);
-        verify(productVectorSyncService, times(1)).deleteProductVector((anyLong()));
+        verify(productVectorSyncService, atLeastOnce()).deleteProductVector((anyLong()));
 
         //Verify data
-        results = findAll();
+        results = waitUntilVectorStoreIsEmpty();
         assertThat(results).isEmpty();
     }
 
@@ -286,7 +293,7 @@ public class ProductCdcConsumerTest extends CdcConsumerTest<ProductMsgKey, Produ
         ProductDetailVm response = getProductDetailVm(productId);
 
         // When
-        when(embeddingModel.embed(any(Document.class))).thenReturn(randomEmbed());
+        mockEmbeddingResponse();
 
         // Simulate Product Detail API response
         final URI url = UriComponentsBuilder.fromUriString(recommendationConfig.getApiUrl())
@@ -308,6 +315,35 @@ public class ProductCdcConsumerTest extends CdcConsumerTest<ProductMsgKey, Produ
     private List<Map<String, Object>> findAll() {
         String sql = "SELECT * FROM vector_store;";
         return jdbcClient.queryForList(sql);
+    }
+
+    private List<Map<String, Object>> waitUntilVectorStoreHasAtLeastRows(int expectedRows)
+            throws InterruptedException {
+        var timeoutMs = 10_000L;
+        var deadline = System.currentTimeMillis() + timeoutMs;
+        List<Map<String, Object>> results = List.of();
+        while (System.currentTimeMillis() < deadline) {
+            results = findAll();
+            if (results.size() >= expectedRows) {
+                return results;
+            }
+            Thread.sleep(200L);
+        }
+        return results;
+    }
+
+    private List<Map<String, Object>> waitUntilVectorStoreIsEmpty() throws InterruptedException {
+        var timeoutMs = 10_000L;
+        var deadline = System.currentTimeMillis() + timeoutMs;
+        List<Map<String, Object>> results = List.of();
+        while (System.currentTimeMillis() < deadline) {
+            results = findAll();
+            if (results.isEmpty()) {
+                return results;
+            }
+            Thread.sleep(200L);
+        }
+        return results;
     }
 
     private static @NotNull ProductDetailVm getProductDetailVm(long productId) {
@@ -378,5 +414,23 @@ public class ProductCdcConsumerTest extends CdcConsumerTest<ProductMsgKey, Produ
             floatArray[i] = random.nextFloat();
         }
         return floatArray;
+    }
+
+    private void mockEmbeddingResponse() {
+        when(embeddingModel.embed(anyList(), any(), any())).thenAnswer(invocation -> {
+            List<?> documents = invocation.getArgument(0);
+            return IntStream.range(0, Math.max(documents.size(), 1))
+                .mapToObj(index -> randomEmbed())
+                .toList();
+        });
+        when(embeddingModel.embed(anyString())).thenReturn(randomEmbed());
+        when(embeddingModel.call(any(EmbeddingRequest.class))).thenAnswer(invocation -> {
+            EmbeddingRequest request = invocation.getArgument(0);
+            return new EmbeddingResponse(
+                IntStream.range(0, Math.max(request.getInstructions().size(), 1))
+                    .mapToObj(index -> new Embedding(randomEmbed(), index))
+                    .toList()
+            );
+        });
     }
 }

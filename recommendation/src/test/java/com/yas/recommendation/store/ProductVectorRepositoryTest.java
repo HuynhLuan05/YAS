@@ -20,7 +20,6 @@ import com.yas.recommendation.viewmodel.ProductDetailVm;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -75,7 +74,7 @@ public class ProductVectorRepositoryTest extends BaseVectorRepositoryTest<Produc
         var productId = 1L;
 
         // When
-        doReturn(Optional.of(true)).when(vectorStore).delete(anyList());
+        doNothing().when(vectorStore).delete(anyList());
         productVectorRepository.delete(productId);
 
         // Then
