@@ -22,9 +22,11 @@
     </properties>
 
     <dependencies>
+        <!-- Override to 4.0.3 for delivery only: fixes Snyk high-severity tomcat-embed-core (Incorrect Authorization) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
+            <version>4.0.3</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -35,6 +37,18 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc-test</artifactId>
             <scope>test</scope>
+        </dependency>
+        <!-- Override to fix Snyk high-severity: Allocation of Resources (keycloak path, inherited from parent) -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>2.21.1</version>
+        </dependency>
+        <!-- Override to fix Snyk high-severity: tools.jackson.core (Jackson 3, inherited from parent) -->
+        <dependency>
+            <groupId>tools.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>3.1.0</version>
         </dependency>
     </dependencies>
 

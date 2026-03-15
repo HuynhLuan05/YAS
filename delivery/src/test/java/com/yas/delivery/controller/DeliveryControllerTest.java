@@ -8,11 +8,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.yas.delivery.service.DeliveryService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 @WebMvcTest(controllers = DeliveryController.class)
+@AutoConfigureMockMvc(addFilters = false)
 class DeliveryControllerTest {
 
     @MockitoBean
@@ -22,10 +24,10 @@ class DeliveryControllerTest {
     private MockMvc mockMvc;
 
     @Test
-    void getStatus_whenCalled_returnsOkWithStatus() throws Exception {
+    void testGetStatus_whenCalled_thenReturnOkWithStatus() throws Exception {
         given(deliveryService.getStatus()).willReturn("DELIVERY_SERVICE_READY");
 
-        mockMvc.perform(get("/delivery/status"))
+        this.mockMvc.perform(get("/delivery/status"))
             .andExpect(status().isOk())
             .andExpect(content().string("DELIVERY_SERVICE_READY"));
     }
