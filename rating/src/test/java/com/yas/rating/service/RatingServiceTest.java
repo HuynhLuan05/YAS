@@ -47,35 +47,37 @@ class RatingServiceTest {
 
     @BeforeEach
     void setUp() {
-        List<Rating> ratingList = List.of(
-            Rating.builder()
-                .content("comment 1")
-                .ratingStar(4)
-                .productId(1L)
-                .productName("product1")
-                .createdBy("")
-                .firstName("Duy")
-                .lastName("Nguyen")
-                .build(),
-            Rating.builder()
-                .content("comment 2")
-                .ratingStar(2)
-                .productId(1L)
-                .productName("product1")
-                .createdBy("user2")
-                .firstName("Hai")
-                .lastName("Le")
-                .build(),
-            Rating.builder()
-                .content("comment 3")
-                .ratingStar(3)
-                .productId(2L)
-                .productName("product2")
-                .createdBy("user3")
-                .firstName("Cuong")
-                .lastName("Tran")
-                .build()
-        );
+        Rating firstRating = Rating.builder()
+            .content("comment 1")
+            .ratingStar(4)
+            .productId(1L)
+            .productName("product1")
+            .firstName("Duy")
+            .lastName("Nguyen")
+            .build();
+        firstRating.setCreatedBy("");
+
+        Rating secondRating = Rating.builder()
+            .content("comment 2")
+            .ratingStar(2)
+            .productId(1L)
+            .productName("product1")
+            .firstName("Hai")
+            .lastName("Le")
+            .build();
+        secondRating.setCreatedBy("user2");
+
+        Rating thirdRating = Rating.builder()
+            .content("comment 3")
+            .ratingStar(3)
+            .productId(2L)
+            .productName("product2")
+            .firstName("Cuong")
+            .lastName("Tran")
+            .build();
+        thirdRating.setCreatedBy("user3");
+
+        List<Rating> ratingList = List.of(firstRating, secondRating, thirdRating);
         ratingRepository.saveAll(ratingList);
     }
 
