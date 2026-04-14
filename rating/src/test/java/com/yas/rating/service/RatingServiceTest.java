@@ -53,6 +53,7 @@ class RatingServiceTest {
                 .ratingStar(4)
                 .productId(1L)
                 .productName("product1")
+                .createdBy("")
                 .firstName("Duy")
                 .lastName("Nguyen")
                 .build(),
@@ -61,6 +62,7 @@ class RatingServiceTest {
                 .ratingStar(2)
                 .productId(1L)
                 .productName("product1")
+                .createdBy("user2")
                 .firstName("Hai")
                 .lastName("Le")
                 .build(),
@@ -69,6 +71,7 @@ class RatingServiceTest {
                 .ratingStar(3)
                 .productId(2L)
                 .productName("product2")
+                .createdBy("user3")
                 .firstName("Cuong")
                 .lastName("Tran")
                 .build()
