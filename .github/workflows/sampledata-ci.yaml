@@ -2,7 +2,6 @@ name: sampledata service ci
 
 on:
   push:
-    branches: ["main"]
     paths:
       - "sampledata/**"
       - ".github/workflows/actions/action.yaml"
@@ -57,17 +56,23 @@ jobs:
         with:
           name: OWASP Dependency Check Report
           path: ${{github.workspace}}/reports
-      - name: Log in to the Container registry
-        if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Log in to Docker Hub
+        if: ${{ github.event_name == 'push' }}
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and push Docker images
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push SHA image
+        if: ${{ github.event_name == 'push' }}
+        uses: docker/build-push-action@v6
+        with:
+          context: ./sampledata
+          push: true
+          tags: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/yas-sampledata:${{ github.sha }}
+      - name: Build and push latest image
         if: ${{ github.ref == 'refs/heads/main' }}
         uses: docker/build-push-action@v6
         with:
           context: ./sampledata
           push: true
-          tags: ghcr.io/nashtech-garage/yas-sampledata:latest
+          tags: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/yas-sampledata:latest

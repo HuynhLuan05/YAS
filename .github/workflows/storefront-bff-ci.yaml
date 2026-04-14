@@ -2,7 +2,6 @@ name: storefront-bff service ci
 
 on:
   push:
-    branches: [ "main" ]
     paths:
       - "storefront-bff/**"
       - ".github/workflows/actions/action.yaml"
@@ -67,17 +66,23 @@ jobs:
           min-coverage-changed-files: 60
           title: 'Storefront BFF Coverage Report'
           update-comment: true
-      - name: Log in to the Container registry
-        if: ${{ github.ref == 'refs/heads/main' }}
+      - name: Log in to Docker Hub
+        if: ${{ github.event_name == 'push' }}
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and push Docker images
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push SHA image
+        if: ${{ github.event_name == 'push' }}
+        uses: docker/build-push-action@v6
+        with:
+          context: ./storefront-bff
+          push: true
+          tags: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/yas-storefront-bff:${{ github.sha }}
+      - name: Build and push latest image
         if: ${{ github.ref == 'refs/heads/main' }}
         uses: docker/build-push-action@v6
         with:
           context: ./storefront-bff
           push: true
-          tags: ghcr.io/nashtech-garage/yas-storefront-bff:latest
+          tags: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/yas-storefront-bff:latest
