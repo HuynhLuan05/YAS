@@ -19,6 +19,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FROM_ORIGINAL_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name == github.repository || github.ref == 'refs/heads/main' }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -35,7 +36,7 @@ jobs:
       - run: npx prettier --check .
         working-directory: storefront
       - name: SonarCloud Scan
-          if: ${{ env.FROM_ORIGINAL_REPOSITORY == 'true' && secrets.SONAR_TOKEN != '' }}
+        if: ${{ env.FROM_ORIGINAL_REPOSITORY == 'true' && env.SONAR_TOKEN != '' }}
         uses: SonarSource/sonarcloud-github-action@master
         with:
           projectBaseDir: storefront
