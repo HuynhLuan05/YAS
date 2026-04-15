@@ -30,7 +30,7 @@ jobs:
             - name: Run Maven Build Command
               run: mvn clean install -pl product -am
             - name: Run Maven Checkstyle
-              if: ${{ env.FROM_ORIGINAL_REPOSITORY == 'true' }}
+              if: ${{ env.FROM_ORIGINAL_REPOSITORY == 'true' && secrets.SONAR_TOKEN != '' }}
               run: mvn checkstyle:checkstyle -pl product -am -Dcheckstyle.output.file=product-checkstyle-result.xml
             - name: Upload Checkstyle Result
               if: ${{ env.FROM_ORIGINAL_REPOSITORY == 'true' }}
