@@ -19,7 +19,7 @@ kubectl apply -f https://raw.githubusercontent.com/keycloak/keycloak-k8s-resourc
 # Install keycloak
 helm upgrade --install keycloak ./keycloak/keycloak \
 --namespace keycloak \
---set hostname="identity.$DOMAIN" \
+--set hostname="keycloak-service.keycloak.svc.cluster.local" \
 --set postgresql.username="$POSTGRESQL_USERNAME" \
 --set postgresql.password="$POSTGRESQL_PASSWORD" \
 --set bootstrapAdmin.username="$BOOTSTRAP_ADMIN_USERNAME" \
