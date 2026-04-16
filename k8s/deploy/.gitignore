@@ -1,0 +1,30 @@
+# Kubernetes credentials - NEVER commit
+kubeconfig*
+*.kubeconfig
+.kube/
+
+# Secrets & credentials
+*.pem
+*.key
+*.crt
+*.p12
+secrets/
+*secret*.yaml
+*secret*.yml
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Helm release state
+*.tgz
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
