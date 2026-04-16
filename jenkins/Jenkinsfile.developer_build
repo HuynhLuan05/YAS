@@ -1,0 +1,172 @@
+pipeline {
+    agent any
+
+    options {
+        disableConcurrentBuilds()
+        timestamps()
+        timeout(time: 45, unit: 'MINUTES')
+        buildDiscarder(logRotator(numToKeepStr: '20'))
+    }
+
+    parameters {
+        choice(
+            name: 'TARGET_SERVICE',
+            choices: [
+                'backoffice-bff', 'cart', 'customer', 'delivery', 'inventory',
+                'location', 'media', 'order', 'payment', 'payment-paypal',
+                'product', 'promotion', 'rating', 'recommendation',
+                'sampledata', 'search', 'storefront-bff', 'tax', 'webhook'
+            ],
+            description: 'Service to deploy using branch commit SHA'
+        )
+        string(name: 'TARGET_BRANCH', defaultValue: 'main', description: 'Branch to resolve commit SHA from')
+        string(name: 'NAMESPACE', defaultValue: 'yas', description: 'Kubernetes namespace')
+    }
+
+    environment {
+        DOMAIN = 'yas.local.com'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                checkout scm
+            }
+        }
+
+        stage('Resolve SHA') {
+            steps {
+                script {
+                    def sha = sh(
+                        script: "git ls-remote --heads origin ${params.TARGET_BRANCH} | awk '{print \$1}' | head -n 1",
+                        returnStdout: true
+                    ).trim()
+
+                    if (!sha) {
+                        error "Cannot resolve SHA for branch: ${params.TARGET_BRANCH}"
+                    }
+
+                    env.TARGET_SHA = sha
+                    env.SHORT_SHA = sha.take(12)
+                    echo "Resolved ${params.TARGET_BRANCH} => ${env.TARGET_SHA}"
+                }
+            }
+        }
+
+        stage('Deploy Configuration') {
+            steps {
+                script {
+                    sh "helm dependency build k8s/charts/yas-configuration"
+                    sh """
+                        helm upgrade --install yas-configuration k8s/charts/yas-configuration \
+                            --namespace ${params.NAMESPACE} --create-namespace \
+                            --set applicationConfig.spring.security.oauth2.resourceserver.jwt.issuer-uri=http://keycloak-service.keycloak.svc.cluster.local/realms/Yas \
+                            --set applicationConfig.springdoc.oauthflow.authorization-url=http://keycloak-service.keycloak.svc.cluster.local/realms/Yas/protocol/openid-connect/auth \
+                            --set applicationConfig.springdoc.oauthflow.token-url=http://keycloak-service.keycloak.svc.cluster.local/realms/Yas/protocol/openid-connect/token \
+                            --set backofficeBffExtraConfig.spring.security.oauth2.client.provider.keycloak.issuer-uri=http://keycloak-service.keycloak.svc.cluster.local/realms/Yas \
+                            --set storefrontBffExtraConfig.spring.security.oauth2.client.provider.keycloak.issuer-uri=http://keycloak-service.keycloak.svc.cluster.local/realms/Yas \
+                            --set customerApplicationConfig.keycloak.auth-server-url=http://keycloak-service.keycloak.svc.cluster.local
+                    """
+                }
+            }
+        }
+
+        stage('Deploy Core Services') {
+            steps {
+                script {
+                    sh "helm dependency build k8s/charts/backoffice-bff"
+                    sh """
+                        helm upgrade --install backoffice-bff k8s/charts/backoffice-bff \
+                            --namespace ${params.NAMESPACE} --create-namespace \
+                            --set backend.ingress.host=backoffice.${env.DOMAIN}
+                    """
+
+                    sh "helm dependency build k8s/charts/storefront-bff"
+                    sh """
+                        helm upgrade --install storefront-bff k8s/charts/storefront-bff \
+                            --namespace ${params.NAMESPACE} --create-namespace \
+                            --set backend.ingress.host=storefront.${env.DOMAIN}
+                    """
+                }
+            }
+        }
+
+        stage('Deploy Target Matrix') {
+            steps {
+                script {
+                    def services = [
+                        'cart', 'customer', 'delivery', 'inventory', 'location',
+                        'media', 'order', 'payment', 'payment-paypal', 'product',
+                        'promotion', 'rating', 'recommendation', 'sampledata',
+                        'search', 'tax', 'webhook'
+                    ]
+
+                    services.each { svc ->
+                        def tag = (svc == params.TARGET_SERVICE) ? env.SHORT_SHA : 'latest'
+
+                        sh "helm dependency build k8s/charts/${svc}"
+                        sh """
+                            helm upgrade --install ${svc} k8s/charts/${svc} \
+                                --namespace ${params.NAMESPACE} --create-namespace \
+                                --set backend.image.repository=ghcr.io/nashtech-garage/yas-${svc} \
+                                --set backend.image.tag=${tag} \
+                                --set backend.ingress.host=api.${env.DOMAIN}
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Deploy UI Gateway') {
+            steps {
+                script {
+                    sh """
+                        helm upgrade --install swagger-ui k8s/charts/swagger-ui \
+                            --namespace ${params.NAMESPACE} --create-namespace \
+                            --set ingress.host=api.${env.DOMAIN}
+                    """
+                }
+            }
+        }
+
+        stage('Expose NodePort URL') {
+            steps {
+                script {
+                    def nodeIp = sh(
+                        script: "kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type==\"InternalIP\")].address}'",
+                        returnStdout: true
+                    ).trim()
+
+                    def nodePort = sh(
+                        script: "kubectl get svc -n ingress-nginx ingress-nginx-controller -o jsonpath='{.spec.ports[?(@.port==80)].nodePort}' 2>/dev/null || true",
+                        returnStdout: true
+                    ).trim()
+
+                    if (!nodePort) {
+                        nodePort = sh(
+                            script: "kubectl get svc -n ${params.NAMESPACE} -o jsonpath='{.items[?(@.spec.type==\"NodePort\")].spec.ports[0].nodePort}'",
+                            returnStdout: true
+                        ).trim().tokenize(' ')[0]
+                    }
+
+                    if (nodeIp && nodePort) {
+                        def url = "http://${nodeIp}:${nodePort}"
+                        currentBuild.description = "<a href='${url}' target='_blank'>YAS NodePort URL</a>"
+                        echo "Access URL: ${url}"
+                    } else {
+                        echo "Cannot resolve NodePort URL automatically"
+                    }
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Deployment completed. ${params.TARGET_SERVICE} uses SHA ${env.SHORT_SHA}; all others use latest."
+        }
+        always {
+            sh "helm list -n ${params.NAMESPACE} || true"
+        }
+    }
+}

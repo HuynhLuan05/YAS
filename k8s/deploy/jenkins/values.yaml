@@ -1,0 +1,60 @@
+controller:
+  serviceType: NodePort
+  servicePort: 8080
+  nodePort: 32080
+  runAsUser: 0
+  fsGroup: 0
+  fsGroupChangePolicy: "Always"
+  usePodSecurityContext: true
+  podSecurityContextOverride:
+    runAsUser: 0
+    runAsGroup: 0
+    fsGroup: 0
+    fsGroupChangePolicy: "Always"
+  containerSecurityContext:
+    runAsUser: 0
+    runAsGroup: 0
+    readOnlyRootFilesystem: false
+    allowPrivilegeEscalation: true
+  jenkinsUrl: http://jenkins.yas.local.com
+  jenkinsAdminEmail: intern-devops@yash.local
+  installPlugins:
+    - kubernetes
+    - workflow-aggregator
+    - git
+    - docker-workflow
+    - blueocean
+    - github
+    - credentials-binding
+    - pipeline-stage-view
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+    limits:
+      cpu: "2"
+      memory: "4Gi"
+  persistence:
+    enabled: true
+    size: 16Gi
+  JCasC:
+    defaultConfig: false
+
+agent:
+  enabled: true
+  podName: default
+  customJenkinsLabels: "jenkins-agent"
+  resources:
+    requests:
+      cpu: "300m"
+      memory: "512Mi"
+    limits:
+      cpu: "2"
+      memory: "2Gi"
+  volumes:
+    - type: HostPath
+      hostPath: /var/run/docker.sock
+      mountPath: /var/run/docker.sock
+
+persistence:
+  enabled: true
