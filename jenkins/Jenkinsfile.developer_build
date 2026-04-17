@@ -55,6 +55,16 @@ pipeline {
             }
         }
 
+        // helm dependency build needs repo registered locally (Chart dependency: stakater/reloader)
+        stage('Helm repo setup') {
+            steps {
+                sh '''
+                    helm repo add stakater https://stakater.github.io/stakater-charts || true
+                    helm repo update
+                '''
+            }
+        }
+
         stage('Deploy Configuration') {
             steps {
                 script {

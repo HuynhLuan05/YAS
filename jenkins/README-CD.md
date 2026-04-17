@@ -197,6 +197,10 @@ Then in Jenkins job:
 
 ## 9) Troubleshooting
 
+- If `no repository definition for https://stakater.github.io/stakater-charts`:
+  - the pipeline runs `Helm repo setup` before deploy; ensure Jenkins can reach the internet for `helm repo update`, or mirror the chart internally.
+- If `Kubernetes cluster unreachable` / `connection refused` to the API server IP in kubeconfig:
+  - the **Jenkins pod** must reach that `server:` URL. A kubeconfig that works on your laptop (e.g. Tailscale `100.x`) may be **unreachable from inside the cluster**. Fix: use an API URL reachable from pods (e.g. internal control-plane address Member 1 provides), or run Jenkins with network access to that endpoint.
 - If `secrets is forbidden` for `system:serviceaccount:jenkins:jenkins`:
   - use **Option C** (kubeconfig credential) with a user/SA that has deploy rights on `yas`, or bind a Role to the Jenkins pod SA (Option A RBAC on cluster).
 - If `helm`/`kubectl` missing in agent:
