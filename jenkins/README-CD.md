@@ -99,6 +99,7 @@ In Jenkins UI (`Manage Jenkins` -> `Plugins`), confirm these are installed:
 ### Option C — Deploy using a kubeconfig credential (not the Jenkins pod ServiceAccount)
 
 Pipelines `developer_build` and `teardown` wrap every `helm` / `kubectl` step with `withCredentials` and set `KUBECONFIG` to the uploaded file. The identity inside that kubeconfig must be allowed to manage Helm releases in namespace `yas` (including `secrets` — Helm 3 stores release metadata there), and to read `nodes` + `ingress-nginx` services for the NodePort URL step.
+For least privilege, the pipeline does **not** create namespaces; ensure `yas` already exists before running `developer_build`.
 
 **A) Jenkins UI**
 
