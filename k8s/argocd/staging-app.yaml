@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: yas-staging
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/HuynhLuan05/YAS.git'
+    targetRevision: HEAD
+    path: k8s/manifests
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: staging
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
