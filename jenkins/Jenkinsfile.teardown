@@ -11,34 +11,39 @@ pipeline {
         string(name: 'NAMESPACE', defaultValue: 'yas', description: 'Kubernetes namespace to teardown')
     }
 
+    environment {
+        KUBECONFIG_CREDENTIAL_ID = 'kubeconfig-yas'
+    }
+
     stages {
         stage('Teardown Helm Releases') {
             steps {
                 script {
-                    def releases = [
-                        'yas-configuration',
-                        'backoffice-bff', 'backoffice-ui',
-                        'storefront-bff', 'storefront-ui',
-                        'swagger-ui',
-                        'cart', 'customer', 'delivery', 'inventory', 'location',
-                        'media', 'order', 'payment', 'payment-paypal', 'product',
-                        'promotion', 'rating', 'recommendation', 'sampledata',
-                        'search', 'tax', 'webhook'
-                    ]
+                    withCredentials([file(credentialsId: env.KUBECONFIG_CREDENTIAL_ID, variable: 'KUBECONFIG')]) {
+                        def releases = [
+                            'yas-configuration',
+                            'backoffice-bff', 'backoffice-ui',
+                            'storefront-bff', 'storefront-ui',
+                            'swagger-ui',
+                            'cart', 'customer', 'delivery', 'inventory', 'location',
+                            'media', 'order', 'payment', 'payment-paypal', 'product',
+                            'promotion', 'rating', 'recommendation', 'sampledata',
+                            'search', 'tax', 'webhook'
+                        ]
 
-                    releases.each { rel ->
-                        sh "helm uninstall ${rel} -n ${params.NAMESPACE} || true"
-                    }
+                        releases.each { rel ->
+                            sh "helm uninstall ${rel} -n ${params.NAMESPACE} || true"
+                        }
 
-                    // Cleanup any release left behind
-                    def leftovers = sh(
-                        script: "helm list -n ${params.NAMESPACE} -q || true",
-                        returnStdout: true
-                    ).trim()
+                        def leftovers = sh(
+                            script: "helm list -n ${params.NAMESPACE} -q || true",
+                            returnStdout: true
+                        ).trim()
 
-                    if (leftovers) {
-                        leftovers.split('\n').findAll { it?.trim() }.each { rel ->
-                            sh "helm uninstall ${rel.trim()} -n ${params.NAMESPACE} || true"
+                        if (leftovers) {
+                            leftovers.split('\n').findAll { it?.trim() }.each { rel ->
+                                sh "helm uninstall ${rel.trim()} -n ${params.NAMESPACE} || true"
+                            }
                         }
                     }
                 }
@@ -47,8 +52,12 @@ pipeline {
 
         stage('Verify Namespace State') {
             steps {
-                sh "helm list -n ${params.NAMESPACE} || true"
-                sh "kubectl get all -n ${params.NAMESPACE} || true"
+                script {
+                    withCredentials([file(credentialsId: env.KUBECONFIG_CREDENTIAL_ID, variable: 'KUBECONFIG')]) {
+                        sh "helm list -n ${params.NAMESPACE} || true"
+                        sh "kubectl get all -n ${params.NAMESPACE} || true"
+                    }
+                }
             }
         }
     }

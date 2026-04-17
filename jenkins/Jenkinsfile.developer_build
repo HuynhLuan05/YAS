@@ -25,6 +25,8 @@ pipeline {
 
     environment {
         DOMAIN = 'yas.local.com'
+        // Jenkins credential ID: Secret file (kubeconfig). See jenkins/README-CD.md — Option C.
+        KUBECONFIG_CREDENTIAL_ID = 'kubeconfig-yas'
     }
 
     stages {
@@ -56,17 +58,19 @@ pipeline {
         stage('Deploy Configuration') {
             steps {
                 script {
-                    sh "helm dependency build k8s/charts/yas-configuration"
-                    sh """
-                        helm upgrade --install yas-configuration k8s/charts/yas-configuration \
-                            --namespace ${params.NAMESPACE} --create-namespace \
-                            --set applicationConfig.spring.security.oauth2.resourceserver.jwt.issuer-uri=http://keycloak-service.keycloak.svc.cluster.local/realms/Yas \
-                            --set applicationConfig.springdoc.oauthflow.authorization-url=http://keycloak-service.keycloak.svc.cluster.local/realms/Yas/protocol/openid-connect/auth \
-                            --set applicationConfig.springdoc.oauthflow.token-url=http://keycloak-service.keycloak.svc.cluster.local/realms/Yas/protocol/openid-connect/token \
-                            --set backofficeBffExtraConfig.spring.security.oauth2.client.provider.keycloak.issuer-uri=http://keycloak-service.keycloak.svc.cluster.local/realms/Yas \
-                            --set storefrontBffExtraConfig.spring.security.oauth2.client.provider.keycloak.issuer-uri=http://keycloak-service.keycloak.svc.cluster.local/realms/Yas \
-                            --set customerApplicationConfig.keycloak.auth-server-url=http://keycloak-service.keycloak.svc.cluster.local
-                    """
+                    withCredentials([file(credentialsId: env.KUBECONFIG_CREDENTIAL_ID, variable: 'KUBECONFIG')]) {
+                        sh "helm dependency build k8s/charts/yas-configuration"
+                        sh """
+                            helm upgrade --install yas-configuration k8s/charts/yas-configuration \
+                                --namespace ${params.NAMESPACE} --create-namespace \
+                                --set applicationConfig.spring.security.oauth2.resourceserver.jwt.issuer-uri=http://keycloak-service.keycloak.svc.cluster.local/realms/Yas \
+                                --set applicationConfig.springdoc.oauthflow.authorization-url=http://keycloak-service.keycloak.svc.cluster.local/realms/Yas/protocol/openid-connect/auth \
+                                --set applicationConfig.springdoc.oauthflow.token-url=http://keycloak-service.keycloak.svc.cluster.local/realms/Yas/protocol/openid-connect/token \
+                                --set backofficeBffExtraConfig.spring.security.oauth2.client.provider.keycloak.issuer-uri=http://keycloak-service.keycloak.svc.cluster.local/realms/Yas \
+                                --set storefrontBffExtraConfig.spring.security.oauth2.client.provider.keycloak.issuer-uri=http://keycloak-service.keycloak.svc.cluster.local/realms/Yas \
+                                --set customerApplicationConfig.keycloak.auth-server-url=http://keycloak-service.keycloak.svc.cluster.local
+                        """
+                    }
                 }
             }
         }
@@ -74,19 +78,21 @@ pipeline {
         stage('Deploy Core Services') {
             steps {
                 script {
-                    sh "helm dependency build k8s/charts/backoffice-bff"
-                    sh """
-                        helm upgrade --install backoffice-bff k8s/charts/backoffice-bff \
-                            --namespace ${params.NAMESPACE} --create-namespace \
-                            --set backend.ingress.host=backoffice.${env.DOMAIN}
-                    """
+                    withCredentials([file(credentialsId: env.KUBECONFIG_CREDENTIAL_ID, variable: 'KUBECONFIG')]) {
+                        sh "helm dependency build k8s/charts/backoffice-bff"
+                        sh """
+                            helm upgrade --install backoffice-bff k8s/charts/backoffice-bff \
+                                --namespace ${params.NAMESPACE} --create-namespace \
+                                --set backend.ingress.host=backoffice.${env.DOMAIN}
+                        """
 
-                    sh "helm dependency build k8s/charts/storefront-bff"
-                    sh """
-                        helm upgrade --install storefront-bff k8s/charts/storefront-bff \
-                            --namespace ${params.NAMESPACE} --create-namespace \
-                            --set backend.ingress.host=storefront.${env.DOMAIN}
-                    """
+                        sh "helm dependency build k8s/charts/storefront-bff"
+                        sh """
+                            helm upgrade --install storefront-bff k8s/charts/storefront-bff \
+                                --namespace ${params.NAMESPACE} --create-namespace \
+                                --set backend.ingress.host=storefront.${env.DOMAIN}
+                        """
+                    }
                 }
             }
         }
@@ -94,24 +100,26 @@ pipeline {
         stage('Deploy Target Matrix') {
             steps {
                 script {
-                    def services = [
-                        'cart', 'customer', 'delivery', 'inventory', 'location',
-                        'media', 'order', 'payment', 'payment-paypal', 'product',
-                        'promotion', 'rating', 'recommendation', 'sampledata',
-                        'search', 'tax', 'webhook'
-                    ]
+                    withCredentials([file(credentialsId: env.KUBECONFIG_CREDENTIAL_ID, variable: 'KUBECONFIG')]) {
+                        def services = [
+                            'cart', 'customer', 'delivery', 'inventory', 'location',
+                            'media', 'order', 'payment', 'payment-paypal', 'product',
+                            'promotion', 'rating', 'recommendation', 'sampledata',
+                            'search', 'tax', 'webhook'
+                        ]
 
-                    services.each { svc ->
-                        def tag = (svc == params.TARGET_SERVICE) ? env.SHORT_SHA : 'latest'
+                        services.each { svc ->
+                            def tag = (svc == params.TARGET_SERVICE) ? env.SHORT_SHA : 'latest'
 
-                        sh "helm dependency build k8s/charts/${svc}"
-                        sh """
-                            helm upgrade --install ${svc} k8s/charts/${svc} \
-                                --namespace ${params.NAMESPACE} --create-namespace \
-                                --set backend.image.repository=ghcr.io/nashtech-garage/yas-${svc} \
-                                --set backend.image.tag=${tag} \
-                                --set backend.ingress.host=api.${env.DOMAIN}
-                        """
+                            sh "helm dependency build k8s/charts/${svc}"
+                            sh """
+                                helm upgrade --install ${svc} k8s/charts/${svc} \
+                                    --namespace ${params.NAMESPACE} --create-namespace \
+                                    --set backend.image.repository=ghcr.io/nashtech-garage/yas-${svc} \
+                                    --set backend.image.tag=${tag} \
+                                    --set backend.ingress.host=api.${env.DOMAIN}
+                            """
+                        }
                     }
                 }
             }
@@ -120,11 +128,13 @@ pipeline {
         stage('Deploy UI Gateway') {
             steps {
                 script {
-                    sh """
-                        helm upgrade --install swagger-ui k8s/charts/swagger-ui \
-                            --namespace ${params.NAMESPACE} --create-namespace \
-                            --set ingress.host=api.${env.DOMAIN}
-                    """
+                    withCredentials([file(credentialsId: env.KUBECONFIG_CREDENTIAL_ID, variable: 'KUBECONFIG')]) {
+                        sh """
+                            helm upgrade --install swagger-ui k8s/charts/swagger-ui \
+                                --namespace ${params.NAMESPACE} --create-namespace \
+                                --set ingress.host=api.${env.DOMAIN}
+                        """
+                    }
                 }
             }
         }
@@ -132,29 +142,31 @@ pipeline {
         stage('Expose NodePort URL') {
             steps {
                 script {
-                    def nodeIp = sh(
-                        script: "kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type==\"InternalIP\")].address}'",
-                        returnStdout: true
-                    ).trim()
-
-                    def nodePort = sh(
-                        script: "kubectl get svc -n ingress-nginx ingress-nginx-controller -o jsonpath='{.spec.ports[?(@.port==80)].nodePort}' 2>/dev/null || true",
-                        returnStdout: true
-                    ).trim()
-
-                    if (!nodePort) {
-                        nodePort = sh(
-                            script: "kubectl get svc -n ${params.NAMESPACE} -o jsonpath='{.items[?(@.spec.type==\"NodePort\")].spec.ports[0].nodePort}'",
+                    withCredentials([file(credentialsId: env.KUBECONFIG_CREDENTIAL_ID, variable: 'KUBECONFIG')]) {
+                        def nodeIp = sh(
+                            script: "kubectl get nodes -o jsonpath='{.items[0].status.addresses[?(@.type==\"InternalIP\")].address}'",
                             returnStdout: true
-                        ).trim().tokenize(' ')[0]
-                    }
+                        ).trim()
 
-                    if (nodeIp && nodePort) {
-                        def url = "http://${nodeIp}:${nodePort}"
-                        currentBuild.description = "<a href='${url}' target='_blank'>YAS NodePort URL</a>"
-                        echo "Access URL: ${url}"
-                    } else {
-                        echo "Cannot resolve NodePort URL automatically"
+                        def nodePort = sh(
+                            script: "kubectl get svc -n ingress-nginx ingress-nginx-controller -o jsonpath='{.spec.ports[?(@.port==80)].nodePort}' 2>/dev/null || true",
+                            returnStdout: true
+                        ).trim()
+
+                        if (!nodePort) {
+                            nodePort = sh(
+                                script: "kubectl get svc -n ${params.NAMESPACE} -o jsonpath='{.items[?(@.spec.type==\"NodePort\")].spec.ports[0].nodePort}'",
+                                returnStdout: true
+                            ).trim().tokenize(' ')[0]
+                        }
+
+                        if (nodeIp && nodePort) {
+                            def url = "http://${nodeIp}:${nodePort}"
+                            currentBuild.description = "<a href='${url}' target='_blank'>YAS NodePort URL</a>"
+                            echo "Access URL: ${url}"
+                        } else {
+                            echo "Cannot resolve NodePort URL automatically"
+                        }
                     }
                 }
             }
@@ -166,7 +178,11 @@ pipeline {
             echo "Deployment completed. ${params.TARGET_SERVICE} uses SHA ${env.SHORT_SHA}; all others use latest."
         }
         always {
-            sh "helm list -n ${params.NAMESPACE} || true"
+            script {
+                withCredentials([file(credentialsId: env.KUBECONFIG_CREDENTIAL_ID, variable: 'KUBECONFIG')]) {
+                    sh "helm list -n ${params.NAMESPACE} || true"
+                }
+            }
         }
     }
 }
