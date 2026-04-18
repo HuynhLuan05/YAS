@@ -360,6 +360,20 @@ spec:
 ---
 
 apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-init-config
+data:
+  init-db.sh: |
+    #!/bin/bash
+    set -e
+    psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-EOSQL
+        CREATE DATABASE product;
+        CREATE DATABASE media;
+    EOSQL
+---
+
+apiVersion: v1
 kind: Service
 metadata:
   name: postgres
@@ -419,6 +433,9 @@ spec:
           volumeMounts:
             - mountPath: "/var/lib/postgresql/data"
               name: postgredb
+            - mountPath: /docker-entrypoint-initdb.d/init-db.sh
+              subPath: init-db.sh
+              name: postgres-init-script
           resources:
             requests:
               memory: "256Mi"
@@ -441,6 +458,10 @@ spec:
           emptyDir: {}
         - name: pgadmin
           emptyDir: {}
+        - name: postgres-init-script
+          configMap:
+            name: postgres-init-config
+            defaultMode: 0755
 ---
 
 apiVersion: v1
