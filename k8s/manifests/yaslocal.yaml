@@ -539,15 +539,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   local:
-    path: "/run/desktop/mnt/host/c/k8s-yas-data/postgres"
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: kubernetes.io/hostname
-          operator: In
-          values:
-          - docker-desktop
+    path: "/tmp/k8s-yas-data/postgres"
 ---
 
 apiVersion: v1
@@ -564,15 +556,7 @@ spec:
   accessModes:
     - ReadWriteOnce
   local:
-    path: "/run/desktop/mnt/host/c/k8s-yas-data/pgadmin"
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: kubernetes.io/hostname
-          operator: In
-          values:
-          - docker-desktop
+    path: "/tmp/k8s-yas-data/pgadmin"
 ---
 
 apiVersion: v1
