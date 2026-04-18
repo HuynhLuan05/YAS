@@ -8,8 +8,9 @@ spec:
     mode: STRICT
 ---
 {{- $namespace := .Release.Namespace }}
+{{- $backendServices := list "media" "product" "cart" "order" "customer" "inventory" "location" "payment" "promotion" "rating" "recommendation" "search" "tax" "webhook" "storefront-bff" "backoffice-bff" }}
 {{- range $dep := .Chart.Dependencies }}
-{{- if not (has $dep.Name (list "yas-configuration" "database" "identity" "jaeger" "swagger-ui")) }}
+{{- if has $dep.Name $backendServices }}
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
@@ -29,6 +30,7 @@ spec:
 ---
 {{- end }}
 {{- end }}
+
 
 
 
