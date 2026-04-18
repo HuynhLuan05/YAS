@@ -18,6 +18,8 @@ metadata:
 spec:
   host: {{ $dep.Name }}.{{ $namespace }}.svc.cluster.local
   trafficPolicy:
+    loadBalancer:
+      simple: ROUND_ROBIN
     retrying:
       attempts: 3
       perTryTimeout: 2s
