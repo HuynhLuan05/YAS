@@ -1,0 +1,19 @@
+# Bật mTLS ở mức STRICT cho toàn bộ namespace dev
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: strict-mtls
+  namespace: dev
+spec:
+  mtls:
+    mode: STRICT
+---
+# Bật mTLS ở mức STRICT cho toàn bộ namespace staging
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: strict-mtls
+  namespace: staging
+spec:
+  mtls:
+    mode: STRICT

@@ -1,0 +1,83 @@
+# Mặc định Deny All requests trong namespace dev
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: deny-all
+  namespace: dev
+spec:
+  {}
+---
+# Cho phép Ingress Nginx (từ namespace ingress-nginx hoặc tương tự) gọi vào BFF
+# (Do tùy thuộc kiến trúc loadbalancer, tạm thời chúng ta mở port 80 từ mọi nguồn để Ingress controller có thể proxy vào, hoặc giới hạn từ namespace nginx). Ở Minikube mặc định ingress-nginx
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-ingress-to-bff
+  namespace: dev
+spec:
+  selector:
+    matchExpressions:
+    - key: app
+      operator: In
+      values: ["storefront-bff", "backoffice-bff"]
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        # Ở môi trường thực tế, set namespaces: ["ingress-nginx"]
+        namespaces: ["ingress-nginx", "default", "istio-system"]
+---
+# Cho phép BFF gọi tới tất cả các Backend microservices (Product, Order, Tax, Media...)
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-bff-to-services
+  namespace: dev
+spec:
+  # Áp dụng cho các Pod KHÔNG PHẢI là bff, ingress hay database
+  # Ở đây mình sẽ thiết lập Allow rule cho các service có prefix chung nhưng hiện tại chưa có label cụ thể.
+  # Có thể dùng label app != storefront-bff (Sẽ áp dụng riêng sau)
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        principals: ["cluster.local/ns/dev/sa/default", "cluster.local/ns/dev/sa/storefront-bff", "cluster.local/ns/dev/sa/backoffice-bff"]
+---
+# Tương tự cho môi trường staging... (Lặp lại nhưng cho namespace staging)
+# Mặc định Deny All requests trong namespace staging
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: deny-all
+  namespace: staging
+spec:
+  {}
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-ingress-to-bff
+  namespace: staging
+spec:
+  selector:
+    matchExpressions:
+    - key: app
+      operator: In
+      values: ["storefront-bff", "backoffice-bff"]
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        namespaces: ["ingress-nginx", "default", "istio-system"]
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-bff-to-services
+  namespace: staging
+spec:
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        principals: ["cluster.local/ns/staging/sa/default", "cluster.local/ns/staging/sa/storefront-bff", "cluster.local/ns/staging/sa/backoffice-bff"]
