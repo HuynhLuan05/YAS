@@ -12,19 +12,31 @@ spec:
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
-  name: allow-ingress-to-bff
+  name: allow-ingress-to-storefront
   namespace: dev
 spec:
   selector:
-    matchExpressions:
-    - key: app
-      operator: In
-      values: ["storefront-bff", "backoffice-bff"]
+    matchLabels:
+      app: storefront
   action: ALLOW
   rules:
   - from:
     - source:
-        # Ở môi trường thực tế, set namespaces: ["ingress-nginx"]
+        namespaces: ["ingress-nginx", "default", "istio-system"]
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-ingress-to-backoffice
+  namespace: dev
+spec:
+  selector:
+    matchLabels:
+      app: backoffice
+  action: ALLOW
+  rules:
+  - from:
+    - source:
         namespaces: ["ingress-nginx", "default", "istio-system"]
 ---
 # Cho phép BFF gọi tới tất cả các Backend microservices (Product, Order, Tax, Media...)
@@ -56,14 +68,27 @@ spec:
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
-  name: allow-ingress-to-bff
+  name: allow-ingress-to-storefront
   namespace: staging
 spec:
   selector:
-    matchExpressions:
-    - key: app
-      operator: In
-      values: ["storefront-bff", "backoffice-bff"]
+    matchLabels:
+      app: storefront
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        namespaces: ["ingress-nginx", "default", "istio-system"]
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-ingress-to-backoffice
+  namespace: staging
+spec:
+  selector:
+    matchLabels:
+      app: backoffice
   action: ALLOW
   rules:
   - from:

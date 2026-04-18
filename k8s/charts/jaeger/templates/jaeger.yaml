@@ -1,0 +1,57 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger
+  labels:
+    app: jaeger
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+  - name: web
+    port: {{ .Values.service.webPort }}
+    targetPort: {{ .Values.service.webTargetPort }}
+  - name: otlpcollectorgprc
+    port: {{ .Values.service.otlpGrpcPort }}
+    nodePort: {{ .Values.service.otlpGrpcNodePort }}
+  - name: otlpcollectorhttp
+    port: {{ .Values.service.otlpHttpPort }}
+    nodePort: {{ .Values.service.otlpHttpNodePort }}
+  selector:
+    app: jaeger
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jaeger
+spec:
+  minReadySeconds: 30
+  selector:
+    matchLabels:
+      app: jaeger
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: jaeger
+    spec:
+      containers:
+      - name: jaeger
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        env:
+        - name: COLLECTOR_ZIPKIN_HOST_PORT
+          value: "9411"
+        - name: COLLECTOR_OTLP_ENABLED
+          value: "true"
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+        ports:
+        - containerPort: 6831
+        - containerPort: 6832
+        - containerPort: 5778
+        - containerPort: 16686
+        - containerPort: 4317
+        - containerPort: 4318
+        - containerPort: 14250
+        - containerPort: 14268
+        - containerPort: 14269
+        - containerPort: 9411
