@@ -1,6 +1,6 @@
 credentials:
   postgresql:
-    username: yasadminuser
+    username: admin
     password: admin
   elasticsearch:
     username: yas
