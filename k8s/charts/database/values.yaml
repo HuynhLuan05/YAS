@@ -34,5 +34,14 @@ initScript:
         CREATE DATABASE product;
         CREATE DATABASE media;
         CREATE DATABASE cart;
-        CREATE DATABASE order;
+        CREATE DATABASE "order";
+        CREATE DATABASE inventory;
+        CREATE DATABASE location;
+        CREATE DATABASE customer;
+        CREATE DATABASE payment;
+        CREATE DATABASE promotion;
+        CREATE DATABASE rating;
+        CREATE DATABASE search;
+        CREATE DATABASE tax;
+
     EOSQL
