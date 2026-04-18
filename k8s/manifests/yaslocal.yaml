@@ -540,6 +540,14 @@ spec:
     - ReadWriteOnce
   local:
     path: "/tmp/k8s-yas-data/postgres"
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - minikube
 ---
 
 apiVersion: v1
@@ -557,6 +565,14 @@ spec:
     - ReadWriteOnce
   local:
     path: "/tmp/k8s-yas-data/pgadmin"
+  nodeAffinity:
+    required:
+      nodeSelectorTerms:
+      - matchExpressions:
+        - key: kubernetes.io/hostname
+          operator: In
+          values:
+          - minikube
 ---
 
 apiVersion: v1
