@@ -7,20 +7,23 @@ spec:
   mtls:
     mode: STRICT
 ---
-# Retry Policy chung cho toàn bộ các service trong namespace
+{{- $namespace := .Release.Namespace }}
+{{- range $dep := .Chart.Dependencies }}
+{{- if not (has $dep.name (list "yas-configuration" "database" "identity" "jaeger" "swagger-ui")) }}
 apiVersion: networking.istio.io/v1alpha3
 kind: DestinationRule
 metadata:
-  name: global-retry-policy
-  namespace: {{ .Release.Namespace }}
+  name: {{ $dep.name }}-retry-policy
+  namespace: {{ $namespace }}
 spec:
-  host: "*.{{ .Release.Namespace }}.svc.cluster.local"
+  host: {{ $dep.name }}.{{ $namespace }}.svc.cluster.local
   trafficPolicy:
-    connectionPool:
-      http:
-        http1MaxPendingRequests: 1024
-        maxRequestsPerConnection: 10
     retrying:
       attempts: 3
       perTryTimeout: 2s
       retryOn: gateway-error,connect-failure,refused-stream
+---
+{{- end }}
+{{- end }}
+
+
