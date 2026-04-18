@@ -168,6 +168,10 @@ spec:
           value: "prod"
         - name: SPRING_SLEUTH_OTEL_EXPORTER_OTLP_ENDPOINT
           value: http://jaeger:4317        
+        - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER_URI
+          value: "http://identity/auth/realms/Yas"
+        - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
+          value: "http://identity/auth/realms/Yas"
         ports:
         - name: http
           containerPort: 80
@@ -203,6 +207,10 @@ spec:
           value: "prod"
         - name: SPRING_SLEUTH_OTEL_EXPORTER_OTLP_ENDPOINT
           value: http://jaeger:4317        
+        - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER_URI
+          value: "http://identity/auth/realms/Yas"
+        - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
+          value: "http://identity/auth/realms/Yas"
         ports:
         - name: http
           containerPort: 80
@@ -250,6 +258,10 @@ spec:
           value: "80"
         - name: SPRING_SLEUTH_OTEL_EXPORTER_OTLP_ENDPOINT
           value: http://jaeger:4317        
+        - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER_URI
+          value: "http://identity/auth/realms/Yas"
+        - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
+          value: "http://identity/auth/realms/Yas"
         ports:
         - name: http
           containerPort: 80
@@ -284,6 +296,10 @@ spec:
           value: "80"
         - name: SPRING_SLEUTH_OTEL_EXPORTER_OTLP_ENDPOINT
           value: http://jaeger:4317        
+        - name: SPRING_SECURITY_OAUTH2_CLIENT_PROVIDER_KEYCLOAK_ISSUER_URI
+          value: "http://identity/auth/realms/Yas"
+        - name: SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI
+          value: "http://identity/auth/realms/Yas"
         ports:
         - name: http
           containerPort: 80
