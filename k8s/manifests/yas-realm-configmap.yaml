@@ -154,10 +154,10 @@ data:
     \ \"Yas\"\n  },\n  \"requiredCredentials\": [\n    \"password\"\n  ],\n  \"otpPolicyType\"\
     : \"totp\",\n  \"otpPolicyAlgorithm\": \"HmacSHA1\",\n  \"otpPolicyInitialCounter\"\
     : 0,\n  \"otpPolicyDigits\": 6,\n  \"otpPolicyLookAheadWindow\": 1,\n  \"otpPolicyPeriod\"\
-    : 30,\n  \"otpPolicyCodeReusable\": false,\n  \"otpSupportedApplications\": [\n\
-    \    \"totpAppGoogleName\",\n    \"totpAppFreeOTPName\",\n    \"totpAppMicrosoftAuthenticatorName\"\
-    \n  ],\n  \"webAuthnPolicyRpEntityName\": \"keycloak\",\n  \"webAuthnPolicySignatureAlgorithms\"\
-    : [\n    \"ES256\"\n  ],\n  \"webAuthnPolicyRpId\": \"\",\n  \"webAuthnPolicyAttestationConveyancePreference\"\
+    : 30,\n  \"otpSupportedApplications\": [\n    \"totpAppGoogleName\",\n    \"totpAppFreeOTPName\"\
+    ,\n    \"totpAppMicrosoftAuthenticatorName\"\n  ],\n  \"webAuthnPolicyRpEntityName\"\
+    : \"keycloak\",\n  \"webAuthnPolicySignatureAlgorithms\": [\n    \"ES256\"\n \
+    \ ],\n  \"webAuthnPolicyRpId\": \"\",\n  \"webAuthnPolicyAttestationConveyancePreference\"\
     : \"not specified\",\n  \"webAuthnPolicyAuthenticatorAttachment\": \"not specified\"\
     ,\n  \"webAuthnPolicyRequireResidentKey\": \"not specified\",\n  \"webAuthnPolicyUserVerificationRequirement\"\
     : \"not specified\",\n  \"webAuthnPolicyCreateTimeout\": 0,\n  \"webAuthnPolicyAvoidSameAuthenticatorRegister\"\
