@@ -33,6 +33,8 @@ spec:
       app: postgres
   template:
     metadata:
+      annotations:
+        traffic.sidecar.istio.io/excludeInboundPorts: "5432"
       labels:
         app: postgres
     spec:
