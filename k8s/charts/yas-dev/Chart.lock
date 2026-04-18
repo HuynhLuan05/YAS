@@ -1,0 +1,33 @@
+dependencies:
+- name: yas-configuration
+  repository: file://../yas-configuration
+  version: 0.4.0
+- name: database
+  repository: file://../database
+  version: 0.1.0
+- name: identity
+  repository: file://../identity
+  version: 0.1.0
+- name: jaeger
+  repository: file://../jaeger
+  version: 0.1.0
+- name: media
+  repository: file://../media
+  version: 0.1.0
+- name: product
+  repository: file://../product
+  version: 0.1.0
+- name: storefront-bff
+  repository: file://../storefront-bff
+  version: 0.1.0
+- name: backoffice-bff
+  repository: file://../backoffice-bff
+  version: 0.1.0
+- name: storefront-ui
+  repository: file://../storefront-ui
+  version: 0.1.0
+- name: backoffice-ui
+  repository: file://../backoffice-ui
+  version: 0.1.0
+digest: sha256:163de0728586919332e73d92bbec2c0d4d027277b423af1e1c7b82aff2a0c112
+generated: "2026-04-18T19:45:50.728825488+07:00"
