@@ -88,9 +88,18 @@ lifecycle:
 
 terminationGracePeriodSeconds: 45
 
+startupProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: metric
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  failureThreshold: 30
+  timeoutSeconds: 5
+
 livenessProbe:
   periodSeconds: 10
-  failureThreshold: 12
+  failureThreshold: 3
   successThreshold: 1
   httpGet:
     path: /actuator/health/liveness
@@ -98,7 +107,7 @@ livenessProbe:
 
 readinessProbe:
   periodSeconds: 10
-  failureThreshold: 12
+  failureThreshold: 3
   successThreshold: 1
   httpGet:
     path: /actuator/health/readiness
@@ -124,11 +133,11 @@ ingress:
 
 resources:
   limits:
-    cpu: 250m
-    memory: 512Mi
+    cpu: 500m
+    memory: 768Mi
   requests:
     cpu: 100m
-    memory: 256Mi
+    memory: 384Mi
 
 autoscaling:
   enabled: false
