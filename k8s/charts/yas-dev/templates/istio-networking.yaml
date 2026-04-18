@@ -1,0 +1,26 @@
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: {{ .Release.Namespace }}
+spec:
+  mtls:
+    mode: STRICT
+---
+# Retry Policy chung cho toàn bộ các service trong namespace
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: global-retry-policy
+  namespace: {{ .Release.Namespace }}
+spec:
+  host: "*.{{ .Release.Namespace }}.svc.cluster.local"
+  trafficPolicy:
+    connectionPool:
+      http:
+        http1MaxPendingRequests: 1024
+        maxRequestsPerConnection: 10
+    retrying:
+      attempts: 3
+      perTryTimeout: 2s
+      retryOn: gateway-error,connect-failure,refused-stream

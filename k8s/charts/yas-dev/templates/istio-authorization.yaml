@@ -1,0 +1,28 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-bff-to-services
+  namespace: {{ .Release.Namespace }}
+spec:
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        principals: 
+        - "cluster.local/ns/{{ .Release.Namespace }}/sa/storefront-bff"
+        - "cluster.local/ns/{{ .Release.Namespace }}/sa/backoffice-bff"
+---
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-ingress-to-bff
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: storefront-bff
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        namespaces: ["ingress-nginx", "istio-system", "default"]
