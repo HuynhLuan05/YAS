@@ -356,9 +356,15 @@ spec:
           value: "postgres"
         - name: DB_DATABASE
           value: "keycloak"
+        - name: KEYCLOAK_IMPORT
+          value: /tmp/yas-realm.json
         ports:
         - name: http
           containerPort: 8080
+        volumeMounts:
+        - name: yas-realm-volume
+          mountPath: /tmp/yas-realm.json
+          subPath: yas-realm.json
         resources:
           requests:
             memory: "512Mi"
@@ -373,6 +379,10 @@ spec:
           initialDelaySeconds: 90
           periodSeconds: 10
           failureThreshold: 15
+      volumes:
+      - name: yas-realm-volume
+        configMap:
+          name: yas-realm-config
 ---
 
 apiVersion: v1
