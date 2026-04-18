@@ -406,7 +406,7 @@ spec:
     spec:
       containers:
         - name: postgres
-          image: postgres
+          image: postgres:16-alpine
           ports:
             - containerPort: 5432
           env:
@@ -414,6 +414,8 @@ spec:
             value: "admin"
           - name: POSTGRES_PASSWORD
             value: "admin"
+          - name: POSTGRES_DB
+            value: "keycloak"
           volumeMounts:
             - mountPath: "/var/lib/postgresql/data"
               name: postgredb
