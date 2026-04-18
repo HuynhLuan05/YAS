@@ -1,0 +1,5 @@
+# Main values file for yas-dev umbrella chart.
+# Individual service values are managed in their respective subcharts.
+# You can override them here if needed, for example:
+# product:
+#   replicaCount: 2
