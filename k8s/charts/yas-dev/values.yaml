@@ -1,13 +1,83 @@
 # Main values file for yas-dev umbrella chart.
+
+# ── BFF Services ──
 storefront-bff:
   backend:
     fullnameOverride: storefront-bff
     serviceAccount:
       create: true
-
+    image:
+      tag: latest        
 backoffice-bff:
   backend:
     fullnameOverride: backoffice-bff
     serviceAccount:
       create: true
+    image:
+      tag: latest       
 
+# ── Backend Services ──
+product:
+  backend:
+    image:
+      tag: latest        
+
+media:
+  backend:
+    image:
+      tag: latest
+
+cart:
+  backend:
+    image:
+      tag: latest
+
+order:
+  backend:
+    image:
+      tag: latest
+
+customer:
+  backend:
+    image:
+      tag: latest
+
+inventory:
+  backend:
+    image:
+      tag: latest
+
+location:
+  backend:
+    image:
+      tag: latest
+
+payment:
+  backend:
+    image:
+      tag: latest
+
+promotion:
+  backend:
+    image:
+      tag: latest
+
+rating:
+  backend:
+    image:
+      tag: latest
+
+search:
+  backend:
+    image:
+      tag: latest
+
+tax:
+  backend:
+    image:
+      tag: latest
+
+webhook:
+  backend:
+    image:
+      tag: latest
