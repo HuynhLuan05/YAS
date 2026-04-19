@@ -5,6 +5,8 @@ backend:
 
   nameOverride: storefront-bff
   fullnameOverride: storefront-bff
+  serviceAccount:
+    create: true
 
   deployment:
     annotations:

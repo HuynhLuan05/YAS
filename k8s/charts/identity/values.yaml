@@ -1,0 +1,37 @@
+# Keycloak Identity Chart Values
+image:
+  repository: quay.io/keycloak/keycloak
+  tag: 16.1.0
+
+service:
+  port: 80
+  targetPort: 8080
+
+resources:
+  requests:
+    memory: "512Mi"
+    cpu: "250m"
+  limits:
+    memory: "1Gi"
+    cpu: "500m"
+
+env:
+  KEYCLOAK_USER: admin
+  KEYCLOAK_PASSWORD: admin
+  DB_VENDOR: POSTGRES
+  DB_USER: admin
+  DB_PASSWORD: admin
+  DB_ADDR: postgres
+  DB_DATABASE: keycloak
+  KEYCLOAK_IMPORT: /tmp/yas-realm.json
+  PROXY_ADDRESS_FORWARDING: "true"
+
+persistence:
+  mountPath: /tmp/yas-realm.json
+  subPath: yas-realm.json
+  configMapName: yas-realm-config
+
+readinessProbe:
+  initialDelaySeconds: 120
+  periodSeconds: 10
+  failureThreshold: 20

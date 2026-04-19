@@ -1,0 +1,58 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: identity
+  labels:
+    app: identity
+spec:
+  ports:
+  - name: http
+    port: {{ .Values.service.port }}
+    targetPort: {{ .Values.service.targetPort }}
+  selector:
+    app: keycloak
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak
+  labels:
+    app: keycloak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+      - name: keycloak
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        env:
+        {{- range $key, $val := .Values.env }}
+        - name: {{ $key }}
+          value: {{ $val | quote }}
+        {{- end }}
+        ports:
+        - name: http
+          containerPort: {{ .Values.service.targetPort }}
+        volumeMounts:
+        - name: yas-realm-volume
+          mountPath: {{ .Values.persistence.mountPath }}
+          subPath: {{ .Values.persistence.subPath }}
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+        readinessProbe:
+          httpGet:
+            path: /auth/realms/master
+            port: {{ .Values.service.targetPort }}
+          initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+          failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+      volumes:
+      - name: yas-realm-volume
+        configMap:
+          name: {{ .Values.persistence.configMapName }}

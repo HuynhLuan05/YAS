@@ -1,0 +1,38 @@
+apiVersion: v2
+name: yas-dev
+description: Umbrella chart for YAS Dev Environment
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
+
+dependencies:
+  - name: yas-configuration
+    version: 0.4.0
+    repository: "file://../yas-configuration"
+  - name: database
+    version: 0.1.0
+    repository: "file://../database"
+  - name: identity
+    version: 0.1.0
+    repository: "file://../identity"
+  - name: jaeger
+    version: 0.1.0
+    repository: "file://../jaeger"
+  - name: media
+    version: 0.1.0
+    repository: "file://../media"
+  - name: product
+    version: 0.1.0
+    repository: "file://../product"
+  - name: storefront-bff
+    version: 0.1.0
+    repository: "file://../storefront-bff"
+  - name: backoffice-bff
+    version: 0.1.0
+    repository: "file://../backoffice-bff"
+  - name: storefront-ui
+    version: 0.1.0
+    repository: "file://../storefront-ui"
+  - name: backoffice-ui
+    version: 0.1.0
+    repository: "file://../backoffice-ui"
